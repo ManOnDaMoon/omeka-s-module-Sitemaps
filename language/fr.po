@@ -1,0 +1,21 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: Module.php:95
+msgid "Sitemap file"
+msgstr "Fichier Sitemap"
+
+#: Module.php:106
+msgid "Enable dynamic sitemap for this site"
+msgstr "Activer la génération dynamique du fichier sitemap pour ce site"
+
+#: Module.php:107
+msgid ""
+"Dynamically generates a sitemap.xml file at the root of the site, e.g.: "
+"https://myomekasite.com/s/slug/sitemap.xml"
+msgstr "Génère dynamiquement un fichier sitemap.xml à la racine du site, ex. : "
+"https://monsiteomeka.com/s/slug/sitemap.xml"
