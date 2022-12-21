@@ -8,7 +8,7 @@ The module is in early development stage and could do with more advanced usage a
 
 ## Installing / Getting started
 
-This module requires Omeka S v3 or greater.
+This module requires Omeka S v4
 
 * Download and unzip in your `omeka-s/modules` directory.
 * Rename the uncompressed folder to `Sitemaps`.
@@ -54,6 +54,7 @@ Also check out my other Omeka S modules:
 * RestrictedSites: https://github.com/ManOnDaMoon/omeka-s-module-RestrictedSites
 * UserNames: https://github.com/ManOnDaMoon/omeka-s-module-UserNames
 * RoleBasedNavigation: https://github.com/ManOnDaMoon/omeka-s-module-RoleBasedNavigation
+* SiteSwitcher: https://github.com/ManOnDaMoon/omeka-s-module-SiteSwitcher
 
 ## Licensing
 
