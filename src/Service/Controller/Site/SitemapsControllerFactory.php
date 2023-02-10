@@ -9,7 +9,7 @@ class SitemapsControllerFactory implements FactoryInterface
 {
 
     /**
-     * Instantiate sitelogin controller class with access to Authentication
+     * Instantiate sitemaps controller class with access to view renderer
      * Service
      *
      * {@inheritDoc}

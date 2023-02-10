@@ -20,6 +20,7 @@ class SitemapsController extends AbstractActionController {
         //TODO : Pagination for over 500 entries
 
         $site = $this->currentSite();
+        $sitemapPage = $this->params('sitemap-page');
         
         $siteSettings = $this->siteSettings();
         $siteSettings->setTargetId($site->id());
@@ -36,8 +37,10 @@ class SitemapsController extends AbstractActionController {
         
         $query = array();
         $query['site_id'] = $site->id();
+        // According to count, enable multi page indexes.
+        // Query options: page, per_page, limit, offset, sort_by, sort_order, return_scalar
         $response = $this->api()->search('items', $query);
-        $response->getTotalResults();
+        $count = $response->getTotalResults();
         $items = $response->getContent();
         
         
@@ -55,7 +58,7 @@ class SitemapsController extends AbstractActionController {
         $view->setVariable('itemsets', $itemsets);
         $view->setVariable('pages', $pages);
         $view->setTerminal(true);
-        
+
         return $view;
     }
 }

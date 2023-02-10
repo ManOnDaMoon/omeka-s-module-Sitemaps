@@ -25,9 +25,12 @@ return [
             'site' => [
                 'child_routes' => [
                     'sitemap' => [
-                        'type' => 'Literal',
+                        'type' => 'Segment',
                         'options' => [
-                            'route' => '/sitemap.xml',
+                            'route' => '/sitemap[-:sitemap-page].xml',
+                            'constraints' => [
+                                'sitemap-page' => '[0-9]*',
+                            ],
                             'defaults' => [
                                 '__NAMESPACE__' => 'Sitemaps\Controller\Site',
                                 '__SITE__' => true,
