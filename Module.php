@@ -10,8 +10,6 @@ use Omeka\Permissions\Acl;
 
 class Module extends AbstractModule
 {
-    const DEFAULT_ENABLE_INDEX = false;
-    
     /**
      * Include the configuration array containing the sitelogin controller, the
      * sitelogin controller factory and the sitelogin route
@@ -63,10 +61,6 @@ class Module extends AbstractModule
                     'addSitemapsSiteSetting'
                 )
                 );
-    }
-    
-    public function install(ServiceLocatorInterface $serviceLocator) {
-        $globalSettings = $serviceLocator->get('Omeka\Settings');
     }
     
     public function uninstall(ServiceLocatorInterface $serviceLocator)
