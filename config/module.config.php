@@ -35,6 +35,19 @@ return [
                                 '__NAMESPACE__' => 'Sitemaps\Controller\Site',
                                 '__SITE__' => true,
                                 'controller' => Sitemaps\Controller\Site\SitemapsController::class,
+                                'action' => 'sitemap',
+                            ],
+                        ],
+                        'may_terminate' => true,
+                    ],
+                    'sitemapindex' => [
+                        'type' => 'Literal',
+                        'options' => [
+                            'route' => '/sitemapindex.xml',
+                            'defaults' => [
+                                '__NAMESPACE__' => 'Sitemaps\Controller\Site',
+                                '__SITE__' => true,
+                                'controller' => Sitemaps\Controller\Site\SitemapsController::class,
                                 'action' => 'index',
                             ],
                         ],

@@ -10,6 +10,8 @@ use Omeka\Permissions\Acl;
 
 class Module extends AbstractModule
 {
+    const DEFAULT_ENABLE_INDEX = false;
+    
     /**
      * Include the configuration array containing the sitelogin controller, the
      * sitelogin controller factory and the sitelogin route
@@ -63,6 +65,10 @@ class Module extends AbstractModule
                 );
     }
     
+    public function install(ServiceLocatorInterface $serviceLocator) {
+        $globalSettings = $serviceLocator->get('Omeka\Settings');
+    }
+    
     public function uninstall(ServiceLocatorInterface $serviceLocator)
     {
         $api = $serviceLocator->get('Omeka\ApiManager');
@@ -72,6 +78,7 @@ class Module extends AbstractModule
         foreach ($sites as $site) {
             $siteSettings->setTargetId($site->id());
             $siteSettings->delete('sitemaps_enablesitemap');
+            $siteSettings->delete('sitemaps_enableindex');
         }
     }
     
@@ -87,33 +94,45 @@ class Module extends AbstractModule
         $form = $event->getTarget();
         
         $siteSettings = $form->getSiteSettings();
+        $options = $form->getOptions();
+        $options['element_groups']['sitemaps'] = 'Sitemaps';
+        $form->setOption('element_groups', $options['element_groups']);
         
-        $form->add([
-            'type' => 'fieldset',
-            'name' => 'sitemaps',
-            'options' => [
-                'label' => 'Sitemap file', // @translate
-            ],
-        ]);
-        
-        $rsFieldset = $form->get('sitemaps');
-        
-        $rsFieldset->add(
+        $form->add(
             array(
                 'name' => 'sitemaps_enablesitemap',
                 'type' => 'Checkbox',
-                'options' => array(
+                'options' => [
+                    'element_group' => 'sitemaps',
                     'label' => 'Enable dynamic sitemap for this site', // @translate
                     'info' => 'Dynamically generates a sitemap.xml file at the root of the site, e.g.: https://myomekasite.com/s/slug/sitemap.xml', // @translate
-                ),
-                'attributes' => array(
+                ],
+                'attributes' => [
                     'value' => (bool) $siteSettings->get(
                         'sitemaps_enablesitemap',
                         false
                         )
-                )
+                ]
             )
             );
+        
+        $form->add(
+            array(
+            'name' => 'sitemaps_enableindex',
+            'type' => 'Checkbox',
+            'options' => [
+                'element_group' => 'sitemaps',
+                'label' => 'Enable sitemap index', // @translate
+                'info' => 'Use this setting if you have a large number of items and pages (i.e. more than 500). A https://myomekasite.com/s/slug/sitemapindex.xml file will be generated with a list of paginated sitemaps.', // @translate
+            ],
+            'attributes' => [
+                'value' => (bool) $siteSettings->get(
+                    'sitemaps_enableindex',
+                    false
+                    )
+            ]
+        )
+        );
         return;
     }
 }

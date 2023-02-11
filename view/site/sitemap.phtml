@@ -2,24 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
-<?php foreach ($itemsets as $itemset): ?>
+<?php foreach ($entries as $entry): ?>
     <url>
-    	<loc><?php echo $itemset->siteUrl($site->slug(), true); ?></loc>
-    	<lastmod><?php echo $itemset->modified()->format('Y-m-d');?></lastmod>
+    	<loc><?php echo $entry->siteUrl($site->slug(), true); ?></loc>
+    	<lastmod><?php echo $entry->modified()->format('Y-m-d');?></lastmod>
     </url>
 <?php endforeach;?>
 
-<?php foreach ($items as $item): ?>
-    <url>
-    	<loc><?php echo $item->siteUrl($site->slug(), true); ?></loc>
-    	<lastmod><?php echo $item->modified()->format('Y-m-d');?></lastmod>
-    </url>
-<?php endforeach;?>
-
-<?php foreach ($pages as $page): ?>
-    <url>
-    	<loc><?php echo $page->siteUrl($site->slug(), true); ?></loc>
-    	<lastmod><?php echo $page->modified()->format('Y-m-d');?></lastmod>
-    </url>
-<?php endforeach;?>
 </urlset>
