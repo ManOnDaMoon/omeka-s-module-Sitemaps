@@ -16,11 +16,51 @@ class SitemapsController extends AbstractActionController {
     
     public function indexAction() {
      
+        $site = $this->currentSite();
+        $sitemaps = [];
+        
+        $siteSettings = $this->siteSettings();
+        $siteSettings->setTargetId($site->id());
+        
+        $hasIndex = $siteSettings->get('sitemaps_enableindex', null);
+        if (!$hasIndex) {
+            $this->response->setStatusCode(404);
+            return;
+        }
+        
+        // Sitemap #1 is for pages and item sets. Check if there are some
+        $pages = array_merge($site->linkedPages(), $site->notlinkedPages());
+        
+        $query = array();
+        $query['site_id'] = $site->id();
+        $response = $this->api()->search('item_sets', $query);
+        $response->getTotalResults();
+        $itemsets = $response->getContent();
+        
+        if (count($pages) > 0 || count($itemsets) > 0) {
+            $sitemaps[] = ['url' => $site->siteUrl($site->slug(), true) . '/sitemap-1.xml',
+                'lastmod' => '' // TODO : Get max lastmod of pages and itemsets
+            ];
+        }
+        
+        // Sitemap #2 and next are for items
+        $query = array();
+        $query['site_id'] = $site->id();
+        $query['limit'] = 0;
+        $response = $this->api()->search('items', $query);
+        $itemsCount = $response->getTotalResults();
+        
+        $sitemapsCount = intval($itemsCount / 200) + (($itemsCount % 200) > 0 ? 1 : 0); // TODO fetch limit from setting
+        
+        for ($i  = 2; $i <= $sitemapsCount + 1; $i++) {
+            $sitemaps[] = ['url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . $i . '.xml',
+                'lastmod' => '' // TODO : Get max lastmod of pages and itemsets
+            ];
+        }
+        
         /** @var \Laminas\View\Model\ViewModel $view */
         $view = new ViewModel();
         $view->setTemplate('site/sitemap-index');
-        
-        $sitemaps = null;
         
         $view->setVariable('sitemaps', $sitemaps);
         $view->setTerminal(true);
@@ -74,10 +114,7 @@ class SitemapsController extends AbstractActionController {
             
             $entries = array_merge($pages, $items, $itemsets);
         } else {
-            // Paginated sitemap file, with a precise
-            //TODO : define structure
-            // Sitemap-1 = pages + item sets ?
-            // Sitemap-2+ = items
+            // Paginated sitemap file
             if ($sitemapPage == "1") {
                 
                 // Fetch site pages
@@ -90,23 +127,22 @@ class SitemapsController extends AbstractActionController {
                 $itemsets = $response->getContent();
                 
                 // For now, assume pages and item sets are less than 500
+                // TODO fetch limit from setting
                 $entries = array_merge($pages, $itemsets);
                 
             } else {
                 $query = array();
                 $query['site_id'] = $site->id();
                 $query['page'] = $sitemapPage - 1;
-                $query['per_page'] = 200;
+                $query['per_page'] = 200; // TODO fetch limit from setting
 
-                $response = $this->api()->search('items', $query); //TODO setting for 500 ? Could ease testing!
+                $response = $this->api()->search('items', $query);
                 $entries = $response->getContent();
                 
                 if (count($entries) == 0) {
                     $this->response->setStatusCode(404);
                     return;
                 }
-
-                assert(count($entries) <= 200); // TODO remove assert
             }
                 
         }
