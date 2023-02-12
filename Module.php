@@ -127,6 +127,21 @@ class Module extends AbstractModule
             ]
         )
         );
+
+        $form->add([
+            'type' => 'Number',
+            'name' => 'sitemaps_maxentries',
+            'options' => [
+                'label' => 'Sitemap max entry count', // @translate
+                'info' => 'Use this setting to control how many entry lines will contain a single sitemap file when using indexing',
+                'element_group' => 'sitemaps'
+            ],
+            'attributes' => [
+                'value' => $siteSettings->get('sitemaps_maxentries', 500),
+                'min' => 1,
+                'max' => 50000,
+            ],
+        ]);
         return;
     }
 }

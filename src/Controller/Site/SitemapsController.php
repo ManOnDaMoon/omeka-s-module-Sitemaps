@@ -28,6 +28,8 @@ class SitemapsController extends AbstractActionController {
             return;
         }
         
+        $maxEntries = (int) $siteSettings->get('sitemaps_maxentries', 500);
+
         // Sitemap #1 is for pages and item sets. Check if there are some
         // Fetch pages
         $query = array();
@@ -61,7 +63,7 @@ class SitemapsController extends AbstractActionController {
         if ($lastModPage && $lastModItemSet) {
                 $lastMod = max([$lastModPage->modified(), $lastModItemSet->modified()]);
         } else if ($lastModPage) {
-                $lastMod = $lastModPage->modified(); // FIXME : Breaks if there is no page on site (which can happen)
+                $lastMod = $lastModPage->modified();
         } else if ($lastModItemSet) {
             $lastMod = $lastModItemSet->modified();
         }
@@ -80,7 +82,7 @@ class SitemapsController extends AbstractActionController {
         $response = $this->api()->search('items', $query);
         $itemsCount = $response->getTotalResults();
         
-        $itemsSitemapsCount = intval($itemsCount / 200) + (($itemsCount % 200) > 0 ? 1 : 0); // TODO fetch limit from setting
+        $itemsSitemapsCount = intval($itemsCount / $maxEntries) + (($itemsCount % $maxEntries) > 0 ? 1 : 0);
         
         for ($i  = $sitemapsCount + 1; $i <= $itemsSitemapsCount + $sitemapsCount ; $i++) {
             $sitemaps[] = ['url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . $i . '.xml',
@@ -126,15 +128,12 @@ class SitemapsController extends AbstractActionController {
         $entries = [];
         
         if (!$hasIndex) {
-            // Simple Sitemap file with all content
-            // TODO: use API to get pages and item sets
+            // Simple Sitemap file with all content - Faster to run
             
             $pages = $site->pages();
             
             $query = array();
             $query['site_id'] = $site->id();
-            // According to count, enable multi page indexes.
-            // Query options: page, per_page, limit, offset, sort_by, sort_order, return_scalar
             $response = $this->api()->search('items', $query);
             $items = $response->getContent();
             
@@ -147,6 +146,10 @@ class SitemapsController extends AbstractActionController {
             
             $entries = array_merge($pages, $items, $itemsets);
         } else {
+            // TODO: use API to get pages and item sets
+            
+            $maxEntries = (int) $siteSettings->get('sitemaps_maxentries', 500);
+
             // Paginated sitemap file
             if ($sitemapPage == "1") {
                 
@@ -167,7 +170,9 @@ class SitemapsController extends AbstractActionController {
                 $query = array();
                 $query['site_id'] = $site->id();
                 $query['page'] = $sitemapPage - 1;
-                $query['per_page'] = 200; // TODO fetch limit from setting
+                $query['per_page'] = $maxEntries;
+                $query['sort_by'] = 'modified';
+                $query['sort_order'] = 'desc';
 
                 $response = $this->api()->search('items', $query);
                 $entries = $response->getContent();
