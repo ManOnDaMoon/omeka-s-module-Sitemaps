@@ -24,19 +24,20 @@ class SitemapsController extends AbstractActionController {
         
         $hasIndex = $siteSettings->get('sitemaps_enableindex', null);
         if (!$hasIndex) {
-            $this->response->setStatusCode(404);
-            return;
+            // Redirect to sitemap action
+            return $this->redirect()->toRoute('site/sitemap', ['site-slug' => $site->slug()]);
         }
         
         $maxEntries = (int) $siteSettings->get('sitemaps_maxentries', 500);
 
         // Sitemap #1 is for pages and item sets. Check if there are some
         // Fetch pages count and last mod date
-        $query = array();
-        $query['site_id'] = $site->id();
-        $query['sort_by'] = 'modified';
-        $query['sort_order'] = 'desc';
-        $query['limit'] = 1;
+        $query = [
+            'site_id' => $site->id(),
+            'sort_by' => 'modified',
+            'sort_order' => 'desc',
+            'limit' => 1,
+        ];
         $response = $this->api()->search('site_pages', $query);
         $pagesCount = $response->getTotalResults();
         if ($content = $response->getContent()) {
@@ -46,11 +47,12 @@ class SitemapsController extends AbstractActionController {
         }
 
         // Fetch item sets
-        $query = array();
-        $query['site_id'] = $site->id();
-        $query['sort_by'] = 'modified';
-        $query['sort_order'] = 'desc';
-        $query['limit'] = 1;
+        $query = [
+            'site_id' => $site->id(),
+            'sort_by' => 'modified',
+            'sort_order' => 'desc',
+            'limit' => 1,
+        ];
         $response = $this->api()->search('item_sets', $query);
         $itemsetsCount = $response->getTotalResults();
         if ($content = $response->getContent()) { // Sites can exist without attached item sets.
@@ -76,23 +78,25 @@ class SitemapsController extends AbstractActionController {
         }
         
         // Sitemap #2 and next are for items
-        $query = array();
-        $query['site_id'] = $site->id();
-        $query['limit'] = 0; // Just get the total count
+        // Just get the total count
+        $query = [
+            'site_id' => $site->id(),
+            'limit' => 0,
+        ];
         $response = $this->api()->search('items', $query);
         $itemsCount = $response->getTotalResults();
         
         $itemsSitemapsCount = intval($itemsCount / $maxEntries) + (($itemsCount % $maxEntries) > 0 ? 1 : 0);
         
         for ($i  = $sitemapsCount + 1; $i <= $itemsSitemapsCount + $sitemapsCount ; $i++) {
-            
-            $query = array();
-            $query['site_id'] = $site->id();
-            $query['sort_by'] = 'modified';
-            $query['sort_order'] = 'desc';
-            $query['limit'] = 1; // just get the last mod for each page
-            $query['per_page'] = $maxEntries;
-            $query['page'] = $i - $sitemapsCount;
+            $query = [
+                'site_id' => $site->id(),
+                'sort_by' => 'modified',
+                'sort_order' => 'desc',
+                'limit' => 1, // Only fetch the last modified entry for each page
+                'per_page' => $maxEntries,
+                'page' => $i - $sitemapsCount,
+            ];
             $response = $this->api()->search('items', $query);
             $content = $response->getContent();
             $itemsCount = $response->getTotalResults();
@@ -127,8 +131,13 @@ class SitemapsController extends AbstractActionController {
         }
         
         $hasIndex = $siteSettings->get('sitemaps_enableindex', null);
-        // If a page is given as parameter, check if sitemap index is enabled
-        if ($hasIndex xor $sitemapPage) {
+
+        if ($hasIndex && !$sitemapPage) {
+            // Requesting sitemap.xml in a context of indexed sitemap without page parameter - Redirect to sitemapindex.xml
+            return $this->redirect()->toRoute('site/sitemapindex', ['site-slug' => $site->slug()]);
+        }
+        if (!$hasIndex && $sitemapPage) {
+            // Requesting a page in a context of unindexed sitemap
             $this->response->setStatusCode(404);
             return;
         }
@@ -144,13 +153,11 @@ class SitemapsController extends AbstractActionController {
             
             $pages = $site->pages();
             
-            $query = array();
-            $query['site_id'] = $site->id();
+            $query = ['site_id' => $site->id()];
             $response = $this->api()->search('items', $query);
             $items = $response->getContent();
             
-            $query = array();
-            $query['site_id'] = $site->id();
+            $query = ['site_id' => $site->id()];
             $response = $this->api()->search('item_sets', $query);
             $response->getTotalResults();
             $itemsets = $response->getContent();
@@ -169,27 +176,27 @@ class SitemapsController extends AbstractActionController {
                 $pages = $site->pages();
                 
                 // Fetch site item sets
-                $query = array();
-                $query['site_id'] = $site->id();
+                $query = ['site_id' => $site->id()];
                 $response = $this->api()->search('item_sets', $query);
                 $itemsets = $response->getContent();
                 
                 // For now, assume pages and item sets are less than 500
-                // TODO fetch limit from setting
+                // TODO Handle limit from setting
                 $entries = array_merge($pages, $itemsets);
                 
             } else {
-                $query = array();
-                $query['site_id'] = $site->id();
-                $query['page'] = $sitemapPage - 1;
-                $query['per_page'] = $maxEntries;
-                $query['sort_by'] = 'modified';
-                $query['sort_order'] = 'desc';
-
+                $query = [
+                    'site_id' => $site->id(),
+                    'sort_by' => 'modified',
+                    'sort_order' => 'desc',
+                    'page' => $sitemapPage - 1,
+                    'per_page' => $maxEntries,
+                ];
                 $response = $this->api()->search('items', $query);
                 $entries = $response->getContent();
                 
                 if (count($entries) == 0) {
+                    // Requesting a non existing page
                     $this->response->setStatusCode(404);
                     return;
                 }
