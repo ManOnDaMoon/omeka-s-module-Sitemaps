@@ -13,7 +13,7 @@ class SitemapsController extends AbstractActionController {
     public function __construct(PhpRenderer $viewRenderer) {
             $this->viewRenderer = $viewRenderer;
     }
-    
+
     public function indexAction() {
      
         $site = $this->currentSite();
@@ -22,6 +22,12 @@ class SitemapsController extends AbstractActionController {
         $siteSettings = $this->siteSettings();
         $siteSettings->setTargetId($site->id());
         
+        $hasSitemap = $siteSettings->get('sitemaps_enablesitemap', null);
+        if (!$hasSitemap) { // Sitemap disabled for this site
+            $this->response->setStatusCode(404);
+            return;
+        }
+
         $hasIndex = $siteSettings->get('sitemaps_enableindex', null);
         if (!$hasIndex) {
             // Redirect to sitemap action
@@ -71,7 +77,8 @@ class SitemapsController extends AbstractActionController {
         }
             
         if ($pagesCount + $itemsetsCount > 0) {
-                $sitemaps[] = ['url' => $site->siteUrl($site->slug(), true) . '/sitemap-1.xml',
+                $sitemaps[] = [
+                    'url' => $site->siteUrl($site->slug(), true) . '/sitemap-1.xml',
                     'lastmod' => $lastMod->format('Y-m-d')
                 ];
                 $sitemapsCount++;
@@ -101,7 +108,8 @@ class SitemapsController extends AbstractActionController {
             $content = $response->getContent();
             $itemsCount = $response->getTotalResults();
             
-            $sitemaps[] = ['url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . $i . '.xml',
+            $sitemaps[] = [
+                'url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . $i . '.xml',
                 'lastmod' => $content[0]->modified()->format('Y-m-d')
             ];
         }
@@ -125,11 +133,11 @@ class SitemapsController extends AbstractActionController {
         $siteSettings = $this->siteSettings();
         $siteSettings->setTargetId($site->id());
         $hasSitemap = $siteSettings->get('sitemaps_enablesitemap', null);
-        if (! $hasSitemap) { // Sitemap disabled for this site
+        if (!$hasSitemap) { // Sitemap disabled for this site
             $this->response->setStatusCode(404);
             return;
         }
-        
+
         $hasIndex = $siteSettings->get('sitemaps_enableindex', null);
 
         if ($hasIndex && !$sitemapPage) {
