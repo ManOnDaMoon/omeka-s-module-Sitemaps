@@ -31,7 +31,7 @@ class SitemapsController extends AbstractActionController {
         $maxEntries = (int) $siteSettings->get('sitemaps_maxentries', 500);
 
         // Sitemap #1 is for pages and item sets. Check if there are some
-        // Fetch pages
+        // Fetch pages count and last mod date
         $query = array();
         $query['site_id'] = $site->id();
         $query['sort_by'] = 'modified';
@@ -85,8 +85,20 @@ class SitemapsController extends AbstractActionController {
         $itemsSitemapsCount = intval($itemsCount / $maxEntries) + (($itemsCount % $maxEntries) > 0 ? 1 : 0);
         
         for ($i  = $sitemapsCount + 1; $i <= $itemsSitemapsCount + $sitemapsCount ; $i++) {
+            
+            $query = array();
+            $query['site_id'] = $site->id();
+            $query['sort_by'] = 'modified';
+            $query['sort_order'] = 'desc';
+            $query['limit'] = 1; // just get the last mod for each page
+            $query['per_page'] = $maxEntries;
+            $query['page'] = $i - $sitemapsCount;
+            $response = $this->api()->search('items', $query);
+            $content = $response->getContent();
+            $itemsCount = $response->getTotalResults();
+            
             $sitemaps[] = ['url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . $i . '.xml',
-                'lastmod' => '' // TODO : Get max lastmod of pages and itemsets. To do so, add sort_by modified and sort_order desc to query
+                'lastmod' => $content[0]->modified()->format('Y-m-d')
             ];
         }
         
