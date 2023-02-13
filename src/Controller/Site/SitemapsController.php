@@ -186,7 +186,8 @@ class SitemapsController extends AbstractActionController {
         // TODO : Add sort_by 'modified' and sort_order 'desc' to query
         
         $site = $this->currentSite();
-        $sitemapPage = $this->params('sitemap-page');
+        
+        $sitemapPage = (int) $this->params('sitemap-page');
         
         $siteSettings = $this->siteSettings();
         $siteSettings->setTargetId($site->id());
@@ -211,7 +212,8 @@ class SitemapsController extends AbstractActionController {
         /** @var \Laminas\View\Model\ViewModel $view */
         $view = new ViewModel();
         $view->setTemplate('site/sitemap');
-         
+        $view->setVariable('site', $site);
+        $view->setTerminal(true);
         $entries = [];
         
         if (!$hasIndex) {
@@ -231,48 +233,94 @@ class SitemapsController extends AbstractActionController {
             
             $entries = array_merge($pages, $items, $itemsets);
         } else {
-            // TODO: use API to get pages and item sets
             
             $maxEntries = (int) $siteSettings->get('sitemaps_maxentries', 500);
 
-            // Paginated sitemap file
-            if ($sitemapPage == "1") {
-                
-                // Fetch site pages
-                $pages = $site->pages();
-                
-                // Fetch site item sets
-                $query = ['site_id' => $site->id()];
-                $response = $this->api()->search('item_sets', $query);
-                $itemsets = $response->getContent();
-                
-                // For now, assume pages and item sets are less than 500
-                // TODO Handle limit from setting
-                $entries = array_merge($pages, $itemsets);
-                
-            } else {
-                $query = [
+            // Fetch pages count and last mod date
+            $query = [
+                'site_id' => $site->id(),
+                'sort_by' => 'modified',
+                'sort_order' => 'desc',
+                'limit' => 0,
+            ];
+            $response = $this->api()->search('site_pages', $query);
+            $pagesCount = $response->getTotalResults();
+            $pagesSitemapsCount = intdiv($pagesCount, $maxEntries) + (($pagesCount % $maxEntries) > 0 ? 1 : 0);
+            
+            
+            // If $sitemapPage <= this count, return the page! Else continue
+            if ($sitemapPage <= $pagesSitemapsCount) {
+                $query = [ //TODO : Use Offset and Limit to only fetch le first modified entry and not the whole page
                     'site_id' => $site->id(),
                     'sort_by' => 'modified',
                     'sort_order' => 'desc',
-                    'page' => $sitemapPage - 1,
-                    'per_page' => $maxEntries,
+                    'limit' => $maxEntries, // Only fetch the last modified entry for each page
+                    'offset' => (($sitemapPage - 1) * $maxEntries)
+                ];
+                $response = $this->api()->search('site_pages', $query);
+                $entries = $response->getContent();
+                $view->setVariable('entries', $entries);
+                return $view;
+            }
+
+
+            $query = [
+                'site_id' => $site->id(),
+                'sort_by' => 'modified',
+                'sort_order' => 'desc',
+                'limit' => 0,
+            ];
+            $response = $this->api()->search('item_sets', $query);
+            $itemsetsCount = $response->getTotalResults();
+            $itemsetsSitemapsCount = intdiv($itemsetsCount, $maxEntries) + (($itemsetsCount % $maxEntries) > 0 ? 1 : 0);
+            
+            
+            // If $sitemapPage <= this count, return the page! Else continue
+            if ($sitemapPage <= $pagesSitemapsCount + $itemsetsSitemapsCount) {
+                $query = [ //TODO : Use Offset and Limit to only fetch le first modified entry and not the whole page
+                    'site_id' => $site->id(),
+                    'sort_by' => 'modified',
+                    'sort_order' => 'desc',
+                    'limit' => $maxEntries, // Only fetch the last modified entry for each page
+                    'offset' => (($sitemapPage - $pagesSitemapsCount - 1) * $maxEntries)
+                ];
+                $response = $this->api()->search('item_sets', $query);
+                $entries = $response->getContent();
+                $view->setVariable('entries', $entries);
+                return $view;
+            }
+            
+            
+            $query = [
+                'site_id' => $site->id(),
+                'limit' => 1,
+                'sort_by' => 'modified',
+                'sort_order' => 'desc',
+            ];
+            $response = $this->api()->search('items', $query);
+            $itemsCount = $response->getTotalResults();
+            $itemsSitemapsCount = intdiv($itemsCount, $maxEntries) + (($itemsCount % $maxEntries) > 0 ? 1 : 0);
+            
+            // If $sitemapPage <= this count, return the page! Else continue
+            if ($sitemapPage <= $pagesSitemapsCount + $itemsetsSitemapsCount + $itemsSitemapsCount) {
+                $query = [ //TODO : Use Offset and Limit to only fetch le first modified entry and not the whole page
+                    'site_id' => $site->id(),
+                    'sort_by' => 'modified',
+                    'sort_order' => 'desc',
+                    'limit' => $maxEntries, // Only fetch the last modified entry for each page
+                    'offset' => (($sitemapPage - $pagesSitemapsCount - $itemsetsSitemapsCount - 1) * $maxEntries)
                 ];
                 $response = $this->api()->search('items', $query);
                 $entries = $response->getContent();
-                
-                if (count($entries) == 0) {
-                    // Requesting a non existing page
-                    $this->response->setStatusCode(404);
-                    return;
-                }
+                $view->setVariable('entries', $entries);
+                return $view;
             }
-                
+            
+            if (count($entries) == 0) {
+                // Requesting a non existing page
+                $this->response->setStatusCode(404);
+                return;
+            }
         }
-        $view->setVariable('site', $site);
-        $view->setVariable('entries', $entries);
-        $view->setTerminal(true);
-
-        return $view;
     }
 }
