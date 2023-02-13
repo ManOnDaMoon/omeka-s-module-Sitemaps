@@ -7,7 +7,6 @@ use Interop\Container\ContainerInterface;
 
 class SitemapsControllerFactory implements FactoryInterface
 {
-
     /**
      * Instantiate sitemaps controller class with access to view renderer
      * Service
