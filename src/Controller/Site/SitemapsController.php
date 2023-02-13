@@ -35,8 +35,9 @@ class SitemapsController extends AbstractActionController {
         }
         
         $maxEntries = (int) $siteSettings->get('sitemaps_maxentries', 500);
-
-        // Sitemap #1 is for pages and item sets. Check if there are some
+        $sitemapsCount = 0;
+        
+        // Sitemaps for pages
         // Fetch pages count and last mod date
         $query = [
             'site_id' => $site->id(),
@@ -46,13 +47,43 @@ class SitemapsController extends AbstractActionController {
         ];
         $response = $this->api()->search('site_pages', $query);
         $pagesCount = $response->getTotalResults();
-        if ($content = $response->getContent()) {
+        if ($content = $response->getContent()) { // Sites can exist without pages
             $lastModPage = $content[0];
-        } else {
-            $lastModPage = null;
         }
 
-        // Fetch item sets
+        if ($pagesCount > 0) { // Generate pages sitemap urls
+            $pagesSitemapsCount = intdiv($pagesCount, $maxEntries) + (($pagesCount % $maxEntries) > 0 ? 1 : 0);
+            if ($pagesSitemapsCount > 1) {
+                for ($i  = 1; $i <= $pagesSitemapsCount ; $i++) {
+                    $query = [ //TODO : Use Offset and Limit to only fetch le first modified entry and not the whole page
+                        'site_id' => $site->id(),
+                        'sort_by' => 'modified',
+                        'sort_order' => 'desc',
+                        'limit' => 1, // Only fetch the last modified entry for each page
+                        'offset' => (($i - 1) * $maxEntries)
+                    ];
+                    $response = $this->api()->search('site_pages', $query);
+                    $content = $response->getContent();
+                    $itemsCount = $response->getTotalResults();
+                    
+                    $sitemaps[] = [
+                        'url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . $i . '.xml',
+                        'lastmod' => $content[0]->modified()->format('Y-m-d')
+                    ];
+                }
+                $sitemapsCount += $pagesSitemapsCount;
+            } else {
+                // Simple case with one single sitemap for Pages
+                $sitemaps[] = [
+                    'url' => $site->siteUrl($site->slug(), true) . '/sitemap-1.xml',
+                    'lastmod' => $lastModPage->modified()->format('Y-m-d')
+                ];
+                $sitemapsCount++;
+            }
+        }
+        
+        // Sitemaps for Item Sets
+        // Fetch item sets count and last mod date
         $query = [
             'site_id' => $site->id(),
             'sort_by' => 'modified',
@@ -63,55 +94,82 @@ class SitemapsController extends AbstractActionController {
         $itemsetsCount = $response->getTotalResults();
         if ($content = $response->getContent()) { // Sites can exist without attached item sets.
             $lastModItemSet = $content[0];
-        } else {
-            $lastModItemSet = null;
         }
         
-        $sitemapsCount = 0;
-        if ($lastModPage && $lastModItemSet) {
-                $lastMod = max([$lastModPage->modified(), $lastModItemSet->modified()]);
-        } else if ($lastModPage) {
-                $lastMod = $lastModPage->modified();
-        } else if ($lastModItemSet) {
-            $lastMod = $lastModItemSet->modified();
-        }
-            
-        if ($pagesCount + $itemsetsCount > 0) {
+        if ($itemsetsCount > 0) { 
+            $itemsetsSitemapsCount = intdiv($itemsetsCount, $maxEntries) + (($itemsetsCount % $maxEntries) > 0 ? 1 : 0);
+            if ($itemsetsSitemapsCount > 1) {
+                for ($i  = $sitemapsCount + 1; $i <= $itemsetsSitemapsCount + $sitemapsCount ; $i++) {
+                    $query = [
+                        'site_id' => $site->id(),
+                        'sort_by' => 'modified',
+                        'sort_order' => 'desc',
+                        'limit' => 1, // Only fetch the last modified entry for each page
+                        'offset' => (($i - $sitemapsCount - 1) * $maxEntries)
+                    ];
+                    $response = $this->api()->search('item_sets', $query);
+                    $content = $response->getContent();
+                    $itemsCount = $response->getTotalResults();
+                    
+                    $sitemaps[] = [
+                        'url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . ($i + $sitemapsCount) . '.xml',
+                        'lastmod' => $content[0]->modified()->format('Y-m-d')
+                    ];
+                }
+                $sitemapsCount += $itemsetsSitemapsCount;
+            } else {
+                // Simple case with one single sitemap for Item Sets
                 $sitemaps[] = [
-                    'url' => $site->siteUrl($site->slug(), true) . '/sitemap-1.xml',
-                    'lastmod' => $lastMod->format('Y-m-d')
+                    'url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . (1 + $sitemapsCount) . '.xml',
+                    'lastmod' => $lastModItemSet->modified()->format('Y-m-d')
                 ];
                 $sitemapsCount++;
+            }
         }
         
         // Sitemap #2 and next are for items
         // Just get the total count
         $query = [
             'site_id' => $site->id(),
-            'limit' => 0,
+            'limit' => 1,
+            'sort_by' => 'modified',
+            'sort_order' => 'desc',
         ];
         $response = $this->api()->search('items', $query);
         $itemsCount = $response->getTotalResults();
-        
-        $itemsSitemapsCount = intval($itemsCount / $maxEntries) + (($itemsCount % $maxEntries) > 0 ? 1 : 0);
-        
-        for ($i  = $sitemapsCount + 1; $i <= $itemsSitemapsCount + $sitemapsCount ; $i++) {
-            $query = [
-                'site_id' => $site->id(),
-                'sort_by' => 'modified',
-                'sort_order' => 'desc',
-                'limit' => 1, // Only fetch the last modified entry for each page
-                'per_page' => $maxEntries,
-                'page' => $i - $sitemapsCount,
-            ];
-            $response = $this->api()->search('items', $query);
-            $content = $response->getContent();
-            $itemsCount = $response->getTotalResults();
-            
-            $sitemaps[] = [
-                'url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . $i . '.xml',
-                'lastmod' => $content[0]->modified()->format('Y-m-d')
-            ];
+        if ($content = $response->getContent()) { // Sites can exist without attached item sets.
+            $lastModItem = $content[0];
+        }
+                
+        if ($itemsCount > 0) {
+            $itemsSitemapsCount = intdiv($itemsCount, $maxEntries) + (($itemsCount % $maxEntries) > 0 ? 1 : 0);
+            if ($itemsSitemapsCount > 1) {
+                for ($i  = $sitemapsCount + 1; $i <= $itemsSitemapsCount + $sitemapsCount ; $i++) {
+                    $query = [
+                        'site_id' => $site->id(),
+                        'sort_by' => 'modified',
+                        'sort_order' => 'desc',
+                        'limit' => 1, // Only fetch the last modified entry for each page
+                        'offset' => (($i - $sitemapsCount - 1) * $maxEntries)
+                    ];
+                    $response = $this->api()->search('items', $query);
+                    $content = $response->getContent();
+                    $itemsCount = $response->getTotalResults();
+                    
+                    $sitemaps[] = [
+                        'url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . $i . '.xml',
+                        'lastmod' => $content[0]->modified()->format('Y-m-d')
+                    ];
+                }
+                $sitemapsCount += $itemsSitemapsCount;
+            } else {
+                // Simple case with one single sitemap for Items
+                $sitemaps[] = [
+                    'url' => $site->siteUrl($site->slug(), true) . '/sitemap-' . (1 + $sitemapsCount) . '.xml',
+                    'lastmod' => $lastModItem->modified()->format('Y-m-d')
+                ];
+                $sitemapsCount++;
+            }
         }
         
         /** @var \Laminas\View\Model\ViewModel $view */
