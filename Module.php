@@ -73,6 +73,7 @@ class Module extends AbstractModule
             $siteSettings->setTargetId($site->id());
             $siteSettings->delete('sitemaps_enablesitemap');
             $siteSettings->delete('sitemaps_enableindex');
+            $siteSettings->delete('sitemaps_maxentries');
         }
     }
     
