@@ -19,3 +19,29 @@ msgid ""
 "https://myomekasite.com/s/slug/sitemap.xml"
 msgstr "Génère dynamiquement un fichier sitemap.xml à la racine du site, ex. : "
 "https://monsiteomeka.com/s/slug/sitemap.xml"
+
+#: Module.php:120
+msgid "Enable sitemap index"
+msgstr "Activer la pagination du fichier sitemap"
+
+#: Module.php:121
+msgid ""
+"Use this setting if you have a large number of items and pages (i.e. more "
+"than 500). A https://myomekasite.com/s/slug/sitemapindex.xml file will be "
+"generated with a list of paginated sitemaps."
+msgstr "Activez cette option si vous avez un grand nombre de contenus et "
+"de pages (généralement plus de 500 en tout). "
+"Un fichier https://myomekasite.com/s/slug/sitemapindex.xml "
+"sera généré avec une liste de fichiers sitemaps secondaires en fonction du "
+"nombre d'entrées maximum paramétré ci-dessous"
+
+#: Module.php:136
+msgid "Sitemap max entry count"
+msgstr "Nombre d'entrées maximum"
+
+#: Module.php:137
+msgid ""
+"Use this setting to control how many entry lines will contain a single "
+"sitemap file when using indexing"
+msgstr "Renseignez ici le nombre de lignes maximum que contiendra chaque "
+"fichier individuel dans le cas où la pagination du fichier sitemap est activée"

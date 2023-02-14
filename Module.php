@@ -134,7 +134,7 @@ class Module extends AbstractModule
             'name' => 'sitemaps_maxentries',
             'options' => [
                 'label' => 'Sitemap max entry count', // @translate
-                'info' => 'Use this setting to control how many entry lines will contain a single sitemap file when using indexing',
+                'info' => 'Use this setting to control how many entry lines will contain a single sitemap file when using indexing', // @translate
                 'element_group' => 'sitemaps'
             ],
             'attributes' => [
