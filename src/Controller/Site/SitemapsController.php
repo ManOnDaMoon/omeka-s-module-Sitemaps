@@ -230,6 +230,10 @@ class SitemapsController extends AbstractActionController
             $itemsets = $response->getContent();
 
             $entries = array_merge($pages, $items, $itemsets);
+            
+            $view->setVariable('entries', $entries);
+            return $view; 
+            
         } else {
             $maxEntries = (int) $siteSettings->get('sitemaps_maxentries', 500);
 
