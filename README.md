@@ -21,6 +21,7 @@ This module includes the following features:
 
 * Individual site setting to enable Sitemap generation
 * Dynamically generate a sitemap.xml file for each site
+* Support Sitemap indexes and paginated files, useful for large collections.
 
 ### Enable Sitemap for a site
 
@@ -32,8 +33,21 @@ To enable the sitemap on a site of your choice:
 * Navigate to your site `Settings` menu.
 * Check the `Enable dynamic sitemap for this site` option and save.
 
-The sitemap.xml file is dynamically generated: there is no file physically created on the server.
+The `sitemap.xml` file is dynamically generated: there is no file physically created on the server.
 The URL for site `site-slug` is the following: `http://myomekasite.com/s/site-slug/sitemap.xml`
+
+### Enable Sitemap indexes
+
+* Navigate to your Omeka-S admin panel.
+* Click on the `Sites` menu.
+* Click the pencil icon next to the site you wish to configure.
+* Navigate to your site `Settings` menu.
+* Check the `Enable sitemap index` option and save.
+* Select a max number of entries for each sitemap index file (default is set to 500) and save
+
+The `sitemap-index.xml` file and the sub-indexes are dynamically generated: there is no file physically created on the server.
+The main URL for site `site-slug` is the following: `http://myomekasite.com/s/site-slug/sitemap-index.xml` with separated indexes created for pages, collections and items.
+
 
 ## Module configuration
 
