@@ -45,7 +45,7 @@ The URL for site `site-slug` is the following: `http://myomekasite.com/s/site-sl
 * Check the `Enable sitemap index` option and save.
 * Select a max number of entries for each sitemap index file (default is set to 500) and save
 
-The `sitemap-index.xml` file and the sub-indexes are dynamically generated: there is no file physically created on the server.
+The `sitemapindex.xml` file and the sub-indexes are dynamically generated: there is no file physically created on the server.
 The main URL for site `site-slug` is the following: `http://myomekasite.com/s/site-slug/sitemap-index.xml` with separated indexes created for pages, collections and items.
 
 
