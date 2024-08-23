@@ -5,6 +5,7 @@ namespace Sitemaps\Controller\Site;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 use Laminas\View\Renderer\PhpRenderer;
+use Laminas\Http\Headers;
 
 class SitemapsController extends AbstractActionController
 {
@@ -179,6 +180,10 @@ class SitemapsController extends AbstractActionController
         $view->setVariable('sitemaps', $sitemaps);
         $view->setTerminal(true);
 
+        /** @var \Laminas\Http\Headers $headers */
+        $headers = $this->response->getHeaders();
+        $headers->addHeaderLine('Content-Type','application/xml');
+        
         return $view;
     }
 
@@ -229,9 +234,14 @@ class SitemapsController extends AbstractActionController
             $response->getTotalResults();
             $itemsets = $response->getContent();
 
-            $entries = array_merge($pages, $items, $itemsets);
+            $entries = array_merge($pages, $items, $itemsets);           
             
             $view->setVariable('entries', $entries);
+            
+            /** @var \Laminas\Http\Headers $headers */
+            $headers = $this->response->getHeaders();
+            $headers->addHeaderLine('Content-Type','application/xml');
+            
             return $view; 
             
         } else {
@@ -260,6 +270,11 @@ class SitemapsController extends AbstractActionController
                 $response = $this->api()->search('site_pages', $query);
                 $entries = $response->getContent();
                 $view->setVariable('entries', $entries);
+                
+                /** @var \Laminas\Http\Headers $headers */
+                $headers = $this->response->getHeaders();
+                $headers->addHeaderLine('Content-Type','application/xml');
+                
                 return $view;
             }
 
@@ -285,6 +300,11 @@ class SitemapsController extends AbstractActionController
                 $response = $this->api()->search('item_sets', $query);
                 $entries = $response->getContent();
                 $view->setVariable('entries', $entries);
+                
+                /** @var \Laminas\Http\Headers $headers */
+                $headers = $this->response->getHeaders();
+                $headers->addHeaderLine('Content-Type','application/xml');
+                
                 return $view;
             }
 
@@ -310,6 +330,11 @@ class SitemapsController extends AbstractActionController
                 $response = $this->api()->search('items', $query);
                 $entries = $response->getContent();
                 $view->setVariable('entries', $entries);
+                
+                /** @var \Laminas\Http\Headers $headers */
+                $headers = $this->response->getHeaders();
+                $headers->addHeaderLine('Content-Type','application/xml');
+                
                 return $view;
             }
 
