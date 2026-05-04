@@ -22,6 +22,7 @@ This module includes the following features:
 * Individual site setting to enable Sitemap generation
 * Dynamically generate a sitemap.xml file for each site
 * Support Sitemap indexes and paginated files, useful for large collections.
+* Global setting to enable a global sitemap
 
 ### Enable Sitemap for a site
 
@@ -47,6 +48,12 @@ The URL for site `site-slug` is the following: `http://myomekasite.com/s/site-sl
 
 The `sitemapindex.xml` file and the sub-indexes are dynamically generated: there is no file physically created on the server.
 The main URL for site `site-slug` is the following: `http://myomekasite.com/s/site-slug/sitemap-index.xml` with separated indexes created for pages, collections and items.
+
+### Enable Global Sitemap
+To enable the global sitemap
+
+* Navigate to the main settings in the admin panel
+* Check enable global sitemaps
 
 
 ## Module configuration
